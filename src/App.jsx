@@ -1,87 +1,101 @@
-import { useState } from "react";
+import "./App.css";
+import { registerUser } from "./services/registerUser";
+import { useForm } from "react-hook-form";
 
-function App() {
+export function App() {
 
-  // save the user credentials in the component
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [passwordCheck, setPasswordCheck] = useState("");
-
-  // saves an object with the validations of each field in the form
-  const [formValidation, setFormValidation] = useState({
-    email: undefined,
-    password: undefined,
-    passwordCheck: undefined
-  });
-
-  const handleSubmit = (event) => {
-    event.preventDefault(); // prevents the browser from performing its default action (reloading the page)
-    alert("Send data to register");
-  };
-
-  const handleEmailChange = (event) => {
-    const value = event.target.value; // gets the email value in the form
-
-    setFormValidation({
-      // gets a copy of the 'formValidation' value and modifies the 'email' key according to the validations
-      ...formValidation,
-      email: (value.length === 0 || !value.includes("@") || !value.includes(".com")) ? "Not valid email" : "",
+  const {
+    register, 
+    handleSubmit, 
+    watch, 
+    formState: { errors, isValid }} = useForm({
+      mode: "onChange", 
+      defaultValues: {
+        email: "", 
+        name: "", 
+        age: undefined, 
+        password: "", 
+        passwordCheck: "", 
+        box: undefined
+      }
     });
 
-    setEmail(value);
+  const onSubmit = (data) => {
+    registerUser(data);
   };
-
-  const handlePasswordChange = (event) => {
-    const value = event.target.value; // gets the password value in the form
-
-    setFormValidation({
-      // gets a copy of the 'formValidation' value and modifies the 'password' key according to the validations
-      ...formValidation,
-      password: value.length < 8 ? "Invalid password" : "",
-    });
-
-    setPassword(value);
-  };
-
-  const handlePasswordCheckChange = (event) => {
-    const value = event.target.value; // gets the password check value in the form
-
-    setFormValidation({
-      // gets a copy of the 'formValidation' value and modifies the 'passwordCheck' key according to the validations
-      ...formValidation,
-      passwordCheck: value !== password ? "Passwords do not match" : "",
-    });
-
-    setPasswordCheck(value);
-  };
-
-  //console.log({formValidation});
-
-  // enables the 'Sign Up' button whether the 'formValidation' keys are empty
-  const isValid = Object.keys(formValidation).every(key => formValidation[key] === "");
 
   return (
     <div>
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit(onSubmit)}>
         <div>
-          <label>Email</label>
-          <input value={email} onChange={handleEmailChange} placeholder="Email" type="email"/>
-          {formValidation.email && (<span style={{color: 'red'}}>{formValidation.email}</span>)}
+          <label>Email
+            <input {...register("email", {
+              required: "email is required",
+              pattern: {
+                value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                message: "email is invalid",
+              }
+            })} type="email" placeholder="Email" />
+          </label>
+          <span className="error" role="alert">{errors.email?.message}</span>
         </div>
         <div>
-          <label>Password</label>
-          <input value={password} onChange={handlePasswordChange} placeholder="Password" type="password"/>
-          {formValidation.password && (<span style={{color: 'red'}}>{formValidation.password}</span>)}
+          <label>Name
+            <input {...register("name", {
+              required: "name is required"
+            })} type="text" placeholder="Name" />
+          </label>
+          <span className="error" role="alert">{errors.name?.message}</span>
         </div>
         <div>
-          <label>Password Check</label>
-          <input value={passwordCheck} onChange={handlePasswordCheckChange} placeholder="Password Check" type="password"/>
-          {formValidation.passwordCheck && (<span style={{color: 'red'}}>{formValidation.passwordCheck}</span>)}
+          <label>Age
+            <input {...register("age", {
+              required: "age is required",
+              min: {
+                value: 18,
+                message: "you must be above 18 to register"
+              }
+            })} type="number" placeholder="Age" />
+          </label>
+          <span className="error" role="alert">{errors.age?.message}</span>
         </div>
-        <button disabled={!isValid}>Sign Up</button>
+        <div>
+          <label>Password
+            <input {...register("password", {
+              required: "password is required",
+              minLength: {
+                value: 8,
+                message: "password is too short"
+              }
+            })} type="password" placeholder="Password" />
+          <span className="error" role="alert">{errors.password?.message}</span>
+          </label>
+        </div>
+        <div>
+          <label>Password check
+            <input {...register("passwordCheck", {
+              required: "password is required", 
+              validate: (value) => value === watch("password") || "passwords do not match"
+            })} type="password" placeholder="Password check" />
+          </label>
+          <span className="error" role="alert">{errors.passwordCheck?.message}</span>
+        </div>
+        <div>
+          <label>
+            <input {...register("box", {
+              required: "please read and accept the terms and conditions"
+            })} type="checkbox" />
+            Accept terms & conditions: Lorem ipsum dolor sit amet, consectetur
+            adipiscing elit. Pellentesque pharetra, tortor ac placerat
+            elementum, neque libero luctus mi, ut efficitur nisl mauris at nisl.
+            Suspendisse non neque et neque facilisis convallis. Praesent erat
+            magna, sollicitudin eu porttitor ut, tincidunt sit amet urna.
+            Vestibulum congue neque metus.
+          </label>
+          <span className="error" role="alert">{errors.box?.message}</span>
+        </div>
+        <button type="submit" disabled={!isValid}>Sign up</button>
       </form>
     </div>
   );
 }
-
-export default App;
